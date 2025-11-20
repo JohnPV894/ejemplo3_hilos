@@ -1,0 +1,95 @@
+\documentclass[12pt,a4paper]{report}
+
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+
+\begin{document}
+
+%---------------------------------------------------------
+%                 PORTADA
+%---------------------------------------------------------
+\begin{titlepage}
+    \centering
+    \vspace*{3cm}
+
+    {\Large\textbf{Actividad 1\_5: Carrera Interfaz}}\\[1.5cm]
+
+    {\large Programación de Servicios}\\[0.5cm]
+    {\large Curso DAM (Desarrollo Multiplataforma)}\\[2cm]
+
+    {\large Autor: John Arenales}\\[0.5cm]
+
+    \vfill
+    {\large \today}
+\end{titlepage}
+
+%---------------------------------------------------------
+%                 ÍNDICE
+%---------------------------------------------------------
+\tableofcontents
+\newpage
+
+%---------------------------------------------------------
+%                 INTRODUCCIÓN
+%---------------------------------------------------------
+\chapter{Introducción}
+
+En esta documentación explico cómo pasé un proyecto que originalmente funcionaba por terminal a una versión con una interfaz gráfica usando JavaFX. Además, detallo cómo se adaptaron los hilos para que funcionaran correctamente en el nuevo entorno gráfico y cómo se incorporó el uso del método \texttt{synchronized} para evitar problemas de concurrencia.
+
+La idea general del proyecto es simular una carrera entre varios coches. Antes, en la versión de consola, los coches simplemente imprimían en pantalla su avance. Ahora, cada coche está representado por una imagen que se mueve sobre la ventana y se muestra un podio final en una ventana emergente.
+
+%---------------------------------------------------------
+%                 DESARROLLO DE LA INTERFAZ
+%---------------------------------------------------------
+\chapter{Desarrollo de la Interfaz}
+
+Para pasar el proyecto de terminal a interfaz gráfica utilicé JavaFX. El diseño se organizó con un archivo \texttt{main.fxml}, donde se colocaron cinco \texttt{ImageView} que representan los coches, un botón para iniciar la carrera y un texto informativo.
+
+Cada coche tiene asociada una imagen en la carpeta \texttt{imgs}. El controlador principal, \texttt{HelloController}, se encarga de recibir los elementos del FXML y manejar los eventos, como el clic del botón que inicia la carrera.
+
+El movimiento de los coches se implementa actualizando la propiedad \texttt{translateX} de cada \texttt{ImageView}. Para poder modificar la interfaz desde un hilo, es obligatorio usar \texttt{Platform.runLater()}, que asegura que los cambios se hagan en el hilo adecuado de JavaFX.
+
+También se creó un segundo archivo FXML, \texttt{ganador-view.fxml}, para mostrar una ventana emergente con el podio. Esta ventana se abre cuando todos los coches han terminado la carrera.
+
+%---------------------------------------------------------
+%                 ADAPTACIÓN DE LOS HILOS
+%---------------------------------------------------------
+\chapter{Adaptación de los Hilos}
+
+En la versión antigua del proyecto, cada coche era un hilo que avanzaba y mostraba su progreso por consola. Para la versión gráfica, los hilos siguen existiendo, pero sus acciones ahora deben afectar a la interfaz.
+
+Por eso, cada instancia de la clase \texttt{Coche} recibe su \texttt{ImageView}. Dentro del método \texttt{run()}, el hilo calcula un avance aleatorio, lo suma a su posición y luego usa \texttt{Platform.runLater()} para que su imagen se mueva en pantalla.
+
+Además, cada coche tiene un límite de meta (800 píxeles). Cuando llega a ese punto, registra su marca en un podio compartido entre todos.
+
+%---------------------------------------------------------
+%                 USO DEL MÉTODO SYNCHRONIZED
+%---------------------------------------------------------
+\chapter{Uso del Método \texttt{synchronized}}
+
+Como todos los hilos intentan modificar la misma lista llamada \texttt{podio}, es necesario evitar que dos coches intenten escribir al mismo tiempo. Para eso se implementó un método estático y sincronizado:
+
+\begin{verbatim}
+private static synchronized void agregarAlPodio(String marca) {
+    ...
+}
+\end{verbatim}
+
+El uso de \texttt{synchronized} garantiza que sólo un hilo puede entrar en este método a la vez. Gracias a esto, el orden en el que los coches llegan se registra correctamente.
+
+Cuando la lista alcanza el número total de participantes, significa que todos los coches llegaron, y se llama al método del controlador que muestra la ventana con los resultados finales.
+
+%---------------------------------------------------------
+%                 CONCLUSIÓN
+%---------------------------------------------------------
+\chapter{Conclusión}
+
+La migración de una aplicación de consola a una interfaz gráfica con JavaFX permite visualizar de forma mucho más clara el comportamiento del programa. El uso adecuado de hilos, junto con \texttt{Platform.runLater()} y el método \texttt{synchronized}, asegura que tanto la lógica como la interfaz funcionen correctamente sin errores de concurrencia.
+
+Este proyecto me permitió practicar manejo de hilos, sincronización, FXML, controladores y ventanas emergentes, todo dentro del entorno de JavaFX, convirtiendo una simulación sencilla en una aplicación más completa e interactiva.
+
+\end{document}
